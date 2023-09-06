@@ -3,7 +3,6 @@ from flask_restful import Resource, Api
 
 import json
 import os
-import tempfile
 
 app = Flask(__name__)
 api = Api(app)
@@ -19,7 +18,7 @@ if not os.path.exists(storage_path):
 
 # Class for working with storage
 class KeyValueStorage(Resource):
-    # get and write data in storage
+    # Get and write data
     def get(self):
         key = request.args.get('key')
         if key is not None:
@@ -37,9 +36,10 @@ class KeyValueStorage(Resource):
             return all_data, 200
 
     def post(self):
-        key = request.args.get('key')
-        value = request.args.get('value')
-        if key is not None and value is not None:
+        data = request.get_json()  # Get data from JSON request
+        if data is not None and 'key' in data and 'value' in data:
+            key = data['key']
+            value = data['value']
             with open(storage_path, 'r') as f:
                 storage_data = json.load(f)
             storage_data[key] = value
@@ -47,19 +47,21 @@ class KeyValueStorage(Resource):
                 json.dump(storage_data, f)
             return "Data added/updated successfully", 201
         else:
-            return "Key and value must be provided", 400
+            return "Key and value must be provided in JSON body", 400
 
 
-# Route "/"
+# Add route "/"
 @app.route('/')
 def index():
-    return "Welcome to the Key-Value Storage API. You can use the following routes:\n" \
-           "- GET /api/v1/storage/json to get all data\n" \
-           "- GET /api/v1/storage/json?key=key to get data by key\n" \
-           "- POST /api/v1/storage/json?key=key&value=value to add or update data by key\n"
+    return """Welcome to the Key-Value Storage API. You can use the following routes:
+
+- GET /api/v1/storage/json to get all data
+- GET /api/v1/storage/json?key=key to get data by key
+- POST /api/v1/storage/json to add or update data (provide JSON body with 'key' and 'value')
+"""
 
 
-# add API routes
+# Add API routes
 api.add_resource(KeyValueStorage, '/api/v1/storage/json', '/api/v1/storage/json/all', '/api/v1/storage/json/write',
                  '/api/v1/storage/json/read')
 
