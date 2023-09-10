@@ -1,0 +1,26 @@
+---
+- name: Configure webservers
+  hosts: webservers
+  become: true
+  roles:
+    - nginx
+
+- name: Configure loadbalancer ha-1
+  hosts: ha-1
+  become: true
+  roles:
+    - haproxy
+    - keepalived
+  vars:
+    keepalived_state: MASTER
+    keepalived_priority: 101
+
+- name: Configure loadbalancer ha-2
+  hosts: ha-2
+  become: true
+  roles:
+    - haproxy
+    - keepalived
+  vars:
+    keepalived_state: BACKUP
+    keepalived_priority: 100
